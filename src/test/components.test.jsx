@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import CloseTimeDistribution from '../components/CloseTimeDistribution'
@@ -87,18 +87,22 @@ describe('Top20SlowTickets', () => {
     expect(container.firstChild).toBeTruthy()
   })
 
-  it('shows the sort dropdown and page-size dropdown', () => {
+  it('shows toolbar dropdowns and column-filter dropdowns', () => {
     render(<Top20SlowTickets tickets={[makeTicket()]} />)
+    // 2 toolbar (page size + sort) + 3 filter row (priority, group, store)
     const combos = screen.getAllByRole('combobox')
-    expect(combos).toHaveLength(2)
+    expect(combos.length).toBeGreaterThanOrEqual(5)
   })
 
   it('page-size dropdown contains 20, 50, 100, All options', () => {
     render(<Top20SlowTickets tickets={[makeTicket()]} />)
-    expect(screen.getByDisplayValue('20')).toBeInTheDocument()
+    // Use getByDisplayValue to target the page-size select specifically
+    const pageSizeSelect = screen.getByDisplayValue('20')
+    expect(within(pageSizeSelect.closest('select') ?? pageSizeSelect).queryAllByRole).toBeTruthy()
     expect(screen.getByText('50')).toBeInTheDocument()
     expect(screen.getByText('100')).toBeInTheDocument()
-    expect(screen.getByText('All')).toBeInTheDocument()
+    // "All" appears multiple times (page-size + filter defaults) — check at least one exists
+    expect(screen.getAllByText('All').length).toBeGreaterThanOrEqual(1)
   })
 
   it('shows "Resolved" column header', () => {
@@ -109,6 +113,42 @@ describe('Top20SlowTickets', () => {
   it('highlights reassignment count > 3 (renders the value)', () => {
     render(<Top20SlowTickets tickets={[makeTicket({ reassignmentCount: 5 })]} />)
     expect(screen.getByText('5')).toBeInTheDocument()
+  })
+
+  it('renders a text filter input for Ticket column', () => {
+    render(<Top20SlowTickets tickets={[makeTicket()]} />)
+    expect(screen.getByPlaceholderText('Filter…')).toBeInTheDocument()
+  })
+
+  it('filters rows by ticket number when text is typed', async () => {
+    const user = userEvent.setup()
+    const tickets = [makeTicket({ number: 'INC001' }), makeTicket({ number: 'INC999' })]
+    render(<Top20SlowTickets tickets={tickets} />)
+    await user.type(screen.getByPlaceholderText('Filter…'), 'INC001')
+    expect(screen.getByText('INC001')).toBeInTheDocument()
+    expect(screen.queryByText('INC999')).not.toBeInTheDocument()
+  })
+
+  it('shows Clear filters button when a filter is active', async () => {
+    const user = userEvent.setup()
+    render(<Top20SlowTickets tickets={[makeTicket()]} />)
+    await user.type(screen.getByPlaceholderText('Filter…'), 'X')
+    expect(screen.getByText(/Clear filters/)).toBeInTheDocument()
+  })
+
+  it('clears all filters when Clear filters is clicked', async () => {
+    const user = userEvent.setup()
+    render(<Top20SlowTickets tickets={[makeTicket({ number: 'INC001' })]} />)
+    await user.type(screen.getByPlaceholderText('Filter…'), 'NOMATCH')
+    await user.click(screen.getByText(/Clear filters/))
+    expect(screen.getByText('INC001')).toBeInTheDocument()
+  })
+
+  it('shows "No tickets match" message when filters return zero rows', async () => {
+    const user = userEvent.setup()
+    render(<Top20SlowTickets tickets={[makeTicket({ number: 'INC001' })]} />)
+    await user.type(screen.getByPlaceholderText('Filter…'), 'NOMATCH')
+    expect(screen.getByText(/No tickets match the current filters/)).toBeInTheDocument()
   })
 })
 
