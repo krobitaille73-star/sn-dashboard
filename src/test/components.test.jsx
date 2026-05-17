@@ -189,7 +189,7 @@ describe('AssignmentGroupChart', () => {
 
   it('renders the section title', () => {
     render(<AssignmentGroupChart data={data} />)
-    expect(screen.getByText('Top Assignment Groups')).toBeInTheDocument()
+    expect(screen.getByText('All Assignment Groups')).toBeInTheDocument()
   })
 
   it('renders without crashing with empty data', () => {

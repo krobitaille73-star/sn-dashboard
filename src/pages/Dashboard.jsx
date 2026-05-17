@@ -72,7 +72,7 @@ export default function Dashboard({ incidents }) {
   }, [filtered]);
   const groupData     = useMemo(() => {
     const g = groupBy(filtered, "assignmentGroup");
-    return Object.entries(g).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 10);
+    return Object.entries(g).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
   }, [filtered]);
   const distData      = useMemo(() => closeTimeDistribution(filtered), [filtered]);
   const slowTickets   = useMemo(() => top20SlowestTickets(filtered), [filtered]);
