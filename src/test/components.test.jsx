@@ -63,7 +63,7 @@ function makeTicket(overrides = {}) {
 describe('Top20SlowTickets', () => {
   it('renders the section title', () => {
     render(<Top20SlowTickets tickets={[makeTicket()]} />)
-    expect(screen.getByText('Top 20 — Longest Time to Close')).toBeInTheDocument()
+    expect(screen.getByText('Slow Tickets — Resolved in > 15 days')).toBeInTheDocument()
   })
 
   it('renders a row for each ticket', () => {
@@ -87,9 +87,23 @@ describe('Top20SlowTickets', () => {
     expect(container.firstChild).toBeTruthy()
   })
 
-  it('shows the sort dropdown', () => {
+  it('shows the sort dropdown and page-size dropdown', () => {
     render(<Top20SlowTickets tickets={[makeTicket()]} />)
-    expect(screen.getByRole('combobox')).toBeInTheDocument()
+    const combos = screen.getAllByRole('combobox')
+    expect(combos).toHaveLength(2)
+  })
+
+  it('page-size dropdown contains 20, 50, 100, All options', () => {
+    render(<Top20SlowTickets tickets={[makeTicket()]} />)
+    expect(screen.getByDisplayValue('20')).toBeInTheDocument()
+    expect(screen.getByText('50')).toBeInTheDocument()
+    expect(screen.getByText('100')).toBeInTheDocument()
+    expect(screen.getByText('All')).toBeInTheDocument()
+  })
+
+  it('shows "Resolved" column header', () => {
+    render(<Top20SlowTickets tickets={[makeTicket()]} />)
+    expect(screen.getByText('Resolved')).toBeInTheDocument()
   })
 
   it('highlights reassignment count > 3 (renders the value)', () => {

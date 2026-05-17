@@ -319,6 +319,7 @@ describe('closeTimeDistribution', () => {
 // ── top20SlowestTickets ───────────────────────────────────────────────────────
 
 describe('top20SlowestTickets', () => {
+  // Helper: wall-clock days (no SLA data so fallback is used)
   function makeSlowInc(number, days) {
     const opened = new Date('2026-01-01T00:00:00')
     const updated = new Date(opened.getTime() + days * 86_400_000)
@@ -330,24 +331,32 @@ describe('top20SlowestTickets', () => {
     })
   }
 
-  it('returns at most N tickets (default 20)', () => {
-    const incidents = Array.from({ length: 30 }, (_, i) => makeSlowInc(`INC${i}`, i + 1))
-    expect(top20SlowestTickets(incidents)).toHaveLength(20)
+  it('only includes tickets with resolve time > 15 days', () => {
+    const under = makeSlowInc('INC-UNDER', 14)   // 14 days — excluded
+    const exact = makeSlowInc('INC-EXACT', 15)   // exactly 15 — excluded (must be >)
+    const over  = makeSlowInc('INC-OVER',  16)   // 16 days — included
+    const result = top20SlowestTickets([under, exact, over])
+    expect(result.map(r => r.number)).toEqual(['INC-OVER'])
+  })
+
+  it('returns all qualifying tickets (no hard cap)', () => {
+    const incidents = Array.from({ length: 30 }, (_, i) => makeSlowInc(`INC${i}`, 16 + i))
+    expect(top20SlowestTickets(incidents)).toHaveLength(30)
   })
 
   it('sorts by closeMinutes descending', () => {
-    const incidents = [makeSlowInc('INC1', 1), makeSlowInc('INC5', 5), makeSlowInc('INC2', 2)]
+    const incidents = [makeSlowInc('INC20', 20), makeSlowInc('INC30', 30), makeSlowInc('INC16', 16)]
     const result = top20SlowestTickets(incidents)
-    expect(result[0].number).toBe('INC5')
-    expect(result[1].number).toBe('INC2')
-    expect(result[2].number).toBe('INC1')
+    expect(result[0].number).toBe('INC30')
+    expect(result[1].number).toBe('INC20')
+    expect(result[2].number).toBe('INC16')
   })
 
   it('excludes tickets with negative close times', () => {
-    const good = makeInc({ State: 'Closed', Opened: '2026-01-01 00:00:00', Updated: '2026-01-02 00:00:00' })
+    const good = makeSlowInc('INC-GOOD', 20)
     const bad  = makeInc({ State: 'Closed', Opened: '2026-01-02 00:00:00', Updated: '2026-01-01 00:00:00' })
     const result = top20SlowestTickets([good, bad])
-    expect(result).toHaveLength(1)
+    expect(result.map(r => r.number)).toEqual(['INC-GOOD'])
   })
 
   it('returns empty array when no closed/resolved incidents', () => {
@@ -356,16 +365,15 @@ describe('top20SlowestTickets', () => {
   })
 
   it('attaches closeMinutes to each result (wall-clock fallback)', () => {
-    const result = top20SlowestTickets([
-      makeInc({ State: 'Closed', Opened: '2026-01-01 00:00:00', Updated: '2026-01-01 01:00:00' }),
-    ])
-    expect(result[0].closeMinutes).toBe(60)
+    const result = top20SlowestTickets([makeSlowInc('INC-X', 16)])
+    expect(result[0].closeMinutes).toBe(16 * 24 * 60)
   })
 
-  it('uses SLA resolveTimeSec when present (SN2)', () => {
-    const inc = makeInc({ State: 'Closed', 'Resolve time': 10800 }) // 10800 s = 180 min
+  it('uses SLA resolveTimeSec when present (SN2) — 20 days in seconds', () => {
+    const secs = 20 * 24 * 60 * 60 // 20 days in seconds
+    const inc = makeInc({ State: 'Closed', 'Resolve time': secs })
     const result = top20SlowestTickets([inc])
-    expect(result[0].closeMinutes).toBe(180)
+    expect(result[0].closeMinutes).toBe(20 * 24 * 60)
   })
 })
 

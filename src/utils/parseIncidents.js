@@ -99,20 +99,21 @@ export function closeTimeDistribution(incidents) {
   return buckets.map((b) => ({ label: b.label, count: counts[b.label] }));
 }
 
+const SLOW_TICKET_THRESHOLD_MINUTES = 15 * 24 * 60; // 15 days
+
 /**
- * Top N tickets with the longest SLA resolve time (closed/resolved).
+ * All closed/resolved tickets with SLA resolve time > 15 days, sorted descending.
  * Uses resolveMinutes() — real ServiceNow business-hours when available.
  */
-export function top20SlowestTickets(incidents, n = 20) {
+export function top20SlowestTickets(incidents) {
   return incidents
     .filter((i) => {
       if (i.state !== "Closed" && i.state !== "Resolved") return false;
       const m = resolveMinutes(i);
-      return m != null && m >= 0;
+      return m != null && m > SLOW_TICKET_THRESHOLD_MINUTES;
     })
     .map((i) => ({ ...i, closeMinutes: resolveMinutes(i) }))
-    .sort((a, b) => b.closeMinutes - a.closeMinutes)
-    .slice(0, n);
+    .sort((a, b) => b.closeMinutes - a.closeMinutes);
 }
 
 /**
