@@ -4,6 +4,7 @@ import {
   groupBy,
   incidentsByMonth,
   closeMinutes,
+  resolveMinutes,
   formatDuration,
   closeTimeDistribution,
   top20SlowestTickets,
@@ -27,6 +28,9 @@ function makeRow(overrides = {}) {
     Priority: '4 - Low',
     State: 'Closed',
     Store: 'Store 1',
+    // SN2 fields — default to "not present" (null/0 → resolveTimeSec = null)
+    'Resolve time': 0,
+    Closed: '',
     ...overrides,
   }
 }
@@ -105,6 +109,35 @@ describe('parseIncidents', () => {
     expect(result).toHaveLength(2)
     expect(result[0].number).toBe('INC001')
     expect(result[1].number).toBe('INC002')
+  })
+
+  // SN2 fields
+  it('parses resolveTimeSec from "Resolve time" when non-zero (SN2)', () => {
+    const inc = makeInc({ 'Resolve time': 3600 })
+    expect(inc.resolveTimeSec).toBe(3600)
+  })
+
+  it('returns null resolveTimeSec when "Resolve time" is 0 (SN2 default)', () => {
+    const inc = makeInc({ 'Resolve time': 0 })
+    expect(inc.resolveTimeSec).toBeNull()
+  })
+
+  it('returns null resolveTimeSec when "Resolve time" is missing (SN2)', () => {
+    const row = makeRow()
+    delete row['Resolve time']
+    const inc = parseIncidents([row])[0]
+    expect(inc.resolveTimeSec).toBeNull()
+  })
+
+  it('parses closed date from "Closed" when valid (SN2)', () => {
+    const inc = makeInc({ Closed: '2026-01-05 10:00:00' })
+    expect(inc.closed).toBeInstanceOf(Date)
+    expect(inc.closed.getFullYear()).toBe(2026)
+  })
+
+  it('returns null closed when "Closed" is empty string (SN2 default)', () => {
+    const inc = makeInc({ Closed: '' })
+    expect(inc.closed).toBeNull()
   })
 })
 
@@ -189,6 +222,32 @@ describe('closeMinutes', () => {
   })
 })
 
+// ── resolveMinutes ────────────────────────────────────────────────────────────
+
+describe('resolveMinutes', () => {
+  it('uses resolveTimeSec (SLA) when present — converts seconds to minutes', () => {
+    const inc = makeInc({ 'Resolve time': 7200 }) // 7200 s = 120 min
+    expect(resolveMinutes(inc)).toBe(120)
+  })
+
+  it('falls back to wall-clock (Updated − Opened) when resolveTimeSec is null', () => {
+    // makeInc default: Opened 2026-01-01 08:00, Updated 2026-01-02 08:00 → 1440 min
+    const inc = makeInc({ 'Resolve time': 0 })
+    expect(inc.resolveTimeSec).toBeNull()
+    expect(resolveMinutes(inc)).toBe(1440)
+  })
+
+  it('returns null when resolveTimeSec is null and opened/updated are missing', () => {
+    const inc = { ...makeInc(), resolveTimeSec: null, opened: null, updated: null }
+    expect(resolveMinutes(inc)).toBeNull()
+  })
+
+  it('is aliased by the deprecated closeMinutes()', () => {
+    const inc = makeInc({ 'Resolve time': 3600 })
+    expect(closeMinutes(inc)).toBe(resolveMinutes(inc))
+  })
+})
+
 // ── formatDuration ────────────────────────────────────────────────────────────
 
 describe('formatDuration', () => {
@@ -249,6 +308,12 @@ describe('closeTimeDistribution', () => {
     const dist = closeTimeDistribution([inc])
     expect(dist.find(b => b.label === '1–3 days').count).toBe(1)
   })
+
+  it('uses SLA resolveTimeSec when present (SN2) — 30 min → "< 1 h" bucket', () => {
+    const inc = makeInc({ State: 'Closed', 'Resolve time': 1800 }) // 1800 s = 30 min
+    const dist = closeTimeDistribution([inc])
+    expect(dist.find(b => b.label === '< 1 h').count).toBe(1)
+  })
 })
 
 // ── top20SlowestTickets ───────────────────────────────────────────────────────
@@ -290,11 +355,17 @@ describe('top20SlowestTickets', () => {
     expect(top20SlowestTickets([inc])).toHaveLength(0)
   })
 
-  it('attaches closeMinutes to each result', () => {
+  it('attaches closeMinutes to each result (wall-clock fallback)', () => {
     const result = top20SlowestTickets([
       makeInc({ State: 'Closed', Opened: '2026-01-01 00:00:00', Updated: '2026-01-01 01:00:00' }),
     ])
     expect(result[0].closeMinutes).toBe(60)
+  })
+
+  it('uses SLA resolveTimeSec when present (SN2)', () => {
+    const inc = makeInc({ State: 'Closed', 'Resolve time': 10800 }) // 10800 s = 180 min
+    const result = top20SlowestTickets([inc])
+    expect(result[0].closeMinutes).toBe(180)
   })
 })
 

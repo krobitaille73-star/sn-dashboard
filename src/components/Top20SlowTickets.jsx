@@ -11,6 +11,13 @@ const PRIORITY_COLOR = {
 // L-1: whitelist prevents prototype-key injection if sort ever comes from a URL param
 const SORT_KEYS = { closeMinutes: true, reassignmentCount: true };
 
+function fmtDate(d) {
+  if (!d) return "—";
+  const dt = d instanceof Date ? d : new Date(d);
+  if (isNaN(dt.getTime())) return "—";
+  return dt.toLocaleDateString("en-CA"); // YYYY-MM-DD
+}
+
 export default function Top20SlowTickets({ tickets }) {
   const [sort, setSort] = useState("closeMinutes");
 
@@ -25,7 +32,7 @@ export default function Top20SlowTickets({ tickets }) {
             Top 20 — Longest Time to Close
           </p>
           <p style={{ margin: "2px 0 0", fontSize: 11, color: "#9ca3af" }}>
-            Ranked by elapsed time from open to last update
+            Ranked by SLA business-hours resolve time (ServiceNow)
           </p>
         </div>
         <select
@@ -33,7 +40,7 @@ export default function Top20SlowTickets({ tickets }) {
           onChange={(e) => setSort(e.target.value)}
           style={{ fontSize: 11, borderRadius: 6, border: "1px solid #e5e7eb", padding: "4px 8px", color: "#374151", cursor: "pointer" }}
         >
-          <option value="closeMinutes">Sort: Duration</option>
+          <option value="closeMinutes">Sort: Resolve Time (SLA)</option>
           <option value="reassignmentCount">Sort: Reassignments</option>
         </select>
       </div>
@@ -42,7 +49,7 @@ export default function Top20SlowTickets({ tickets }) {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <thead>
             <tr style={{ borderBottom: "2px solid #f3f4f6" }}>
-              {["#", "Ticket", "Duration", "Priority", "Assignment Group", "Reassignments", "Store"].map((h) => (
+              {["#", "Ticket", "Resolve Time (SLA)", "Priority", "Assignment Group", "Reassignments", "Store", "Closed"].map((h) => (
                 <th key={h} style={{ padding: "6px 8px", textAlign: "left", fontWeight: 700, color: "#6b7280", whiteSpace: "nowrap" }}>
                   {h}
                 </th>
@@ -84,6 +91,9 @@ export default function Top20SlowTickets({ tickets }) {
                 </td>
                 <td style={{ padding: "6px 8px", color: "#374151", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {t.store}
+                </td>
+                <td style={{ padding: "6px 8px", color: "#6b7280", whiteSpace: "nowrap" }}>
+                  {fmtDate(t.closed)}
                 </td>
               </tr>
             ))}

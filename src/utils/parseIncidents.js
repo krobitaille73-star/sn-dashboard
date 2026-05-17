@@ -21,6 +21,12 @@ export function parseIncidents(rows) {
     priority: row["Priority"] ?? "",
     state: row["State"] ?? "",
     store: row["Store"] ?? "",
+    // SN2: real ServiceNow SLA business-hours duration in seconds
+    resolveTimeSec: row["Resolve time"] != null && row["Resolve time"] !== 0
+      ? Number(row["Resolve time"])
+      : null,
+    // SN2: actual close timestamp (null for Resolved-but-not-yet-Closed tickets)
+    closed: safeDate(row["Closed"]),
   }));
 }
 
@@ -45,10 +51,20 @@ export function incidentsByMonth(incidents) {
     .map(([month, count]) => ({ month, count }));
 }
 
-/** Minutes between opened and updated. Returns null when either date is missing. */
-export function closeMinutes(inc) {
+/**
+ * Preferred: SLA business-hours resolve time in minutes (from SN2 "Resolve time" field).
+ * Falls back to wall-clock (Updated − Opened) when resolveTimeSec is unavailable.
+ */
+export function resolveMinutes(inc) {
+  if (inc.resolveTimeSec != null) return inc.resolveTimeSec / 60;
+  // legacy fallback for SN1 data without Resolve time
   if (!inc.opened || !inc.updated) return null;
   return (inc.updated - inc.opened) / 60_000;
+}
+
+/** @deprecated Use resolveMinutes() — kept for backward compatibility. */
+export function closeMinutes(inc) {
+  return resolveMinutes(inc);
 }
 
 export function formatDuration(minutes) {
@@ -58,7 +74,11 @@ export function formatDuration(minutes) {
   return `${(minutes / 1440).toFixed(1)} days`;
 }
 
-/** Distribution of close times bucketed into day ranges. */
+/**
+ * Distribution of SLA resolve times bucketed into ranges.
+ * Uses real ServiceNow business-hours "Resolve time" (SN2) when available,
+ * falls back to wall-clock (Updated − Opened) for older data.
+ */
 export function closeTimeDistribution(incidents) {
   const closed = incidents.filter((i) => i.state === "Closed" || i.state === "Resolved");
   const buckets = [
@@ -71,7 +91,7 @@ export function closeTimeDistribution(incidents) {
   ];
   const counts = Object.fromEntries(buckets.map((b) => [b.label, 0]));
   closed.forEach((inc) => {
-    const m = closeMinutes(inc);
+    const m = resolveMinutes(inc);
     if (m == null || m < 0) return;
     const bucket = buckets.find((b) => m < b.max);
     if (bucket) counts[bucket.label]++;
@@ -79,15 +99,18 @@ export function closeTimeDistribution(incidents) {
   return buckets.map((b) => ({ label: b.label, count: counts[b.label] }));
 }
 
-/** Top N tickets with the longest time from opened to updated (closed/resolved). */
+/**
+ * Top N tickets with the longest SLA resolve time (closed/resolved).
+ * Uses resolveMinutes() — real ServiceNow business-hours when available.
+ */
 export function top20SlowestTickets(incidents, n = 20) {
   return incidents
     .filter((i) => {
       if (i.state !== "Closed" && i.state !== "Resolved") return false;
-      const m = closeMinutes(i);
+      const m = resolveMinutes(i);
       return m != null && m >= 0;
     })
-    .map((i) => ({ ...i, closeMinutes: closeMinutes(i) }))
+    .map((i) => ({ ...i, closeMinutes: resolveMinutes(i) }))
     .sort((a, b) => b.closeMinutes - a.closeMinutes)
     .slice(0, n);
 }

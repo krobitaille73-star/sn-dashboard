@@ -11,7 +11,7 @@ import TeamInactivity from "../components/TeamInactivity";
 import {
   groupBy,
   incidentsByMonth,
-  closeMinutes,
+  resolveMinutes,
   formatDuration,
   closeTimeDistribution,
   top20SlowestTickets,
@@ -44,13 +44,13 @@ export default function Dashboard({ incidents }) {
     return { total, critical, resolved, closed };
   }, [filtered]);
 
-  // --- KPI row 2: close-time insights ---
+  // --- KPI row 2: close-time insights (SLA business-hours via resolveMinutes) ---
   const closeKpis = useMemo(() => {
     const closable = filtered.filter(
-      (i) => (i.state === "Closed" || i.state === "Resolved") && closeMinutes(i) >= 0
+      (i) => (i.state === "Closed" || i.state === "Resolved") && resolveMinutes(i) >= 0
     );
     if (!closable.length) return { avg: "—", median: "—", fastest: "—", slowest: "—" };
-    const mins = closable.map((i) => closeMinutes(i)).sort((a, b) => a - b);
+    const mins = closable.map((i) => resolveMinutes(i)).sort((a, b) => a - b);
     const avg = mins.reduce((s, m) => s + m, 0) / mins.length;
     const median = mins[Math.floor(mins.length / 2)];
     return {
@@ -154,10 +154,10 @@ export default function Dashboard({ incidents }) {
         {section === "Close Time" && (
           <>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 16 }}>
-              <KpiCard title="Avg Close Time" value={closeKpis.avg} color="blue" badge="Avg" icon="⏱" sub="From open to last update" />
-              <KpiCard title="Median Close Time" value={closeKpis.median} color="purple" badge="Median" icon="📊" />
-              <KpiCard title="Fastest Closed" value={closeKpis.fastest} color="green" badge="Best" icon="⚡" />
-              <KpiCard title="Slowest Closed" value={closeKpis.slowest} color="red" badge="Worst" icon="🐢" />
+              <KpiCard title="Avg Resolve Time" value={closeKpis.avg} color="blue" badge="Avg" icon="⏱" sub="SLA business-hours (ServiceNow)" />
+              <KpiCard title="Median Resolve Time" value={closeKpis.median} color="purple" badge="Median" icon="📊" />
+              <KpiCard title="Fastest Resolved" value={closeKpis.fastest} color="green" badge="Best" icon="⚡" />
+              <KpiCard title="Slowest Resolved" value={closeKpis.slowest} color="red" badge="Worst" icon="🐢" />
             </div>
             <CloseTimeDistribution data={distData} />
           </>
