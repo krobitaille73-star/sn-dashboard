@@ -95,6 +95,7 @@ export default function Dashboard({ incidents }) {
           <input
             style={{ borderRadius: 8, border: "1px solid #e2e8f0", padding: "8px 14px", fontSize: 13, width: 240, boxShadow: "0 1px 2px rgba(0,0,0,.05)", outline: "none" }}
             placeholder="Search ticket, store…"
+            maxLength={200}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />

@@ -57,6 +57,17 @@ describe('parseIncidents', () => {
     expect(inc.opened.getFullYear()).toBe(2026)
   })
 
+  it('returns null for missing or invalid date fields (M-4)', () => {
+    const inc = parseIncidents([{ Number: 'INC-X', Opened: '', Updated: 'not-a-date' }])[0]
+    expect(inc.opened).toBeNull()
+    expect(inc.updated).toBeNull()
+  })
+
+  it('strips leading BOM characters from shortDescription (M-5)', () => {
+    const inc = makeInc({ 'Short description': '﻿Order Confirmation 123' })
+    expect(inc.shortDescription).toBe('Order Confirmation 123')
+  })
+
   it('defaults missing optional fields to empty string', () => {
     const inc = parseIncidents([{
       Number: 'INC0000002',
@@ -169,6 +180,13 @@ describe('closeMinutes', () => {
     const inc = makeInc({ Opened: '2026-01-02 00:00:00', Updated: '2026-01-01 00:00:00' })
     expect(closeMinutes(inc)).toBeLessThan(0)
   })
+
+  it('returns null when opened or updated is missing (M-4)', () => {
+    const noOpened  = { ...makeInc(), opened: null }
+    const noUpdated = { ...makeInc(), updated: null }
+    expect(closeMinutes(noOpened)).toBeNull()
+    expect(closeMinutes(noUpdated)).toBeNull()
+  })
 })
 
 // ── formatDuration ────────────────────────────────────────────────────────────
@@ -190,6 +208,11 @@ describe('formatDuration', () => {
     expect(formatDuration(1440)).toBe('1.0 days')
     expect(formatDuration(2880)).toBe('2.0 days')
     expect(formatDuration(10080)).toBe('7.0 days')
+  })
+
+  it('returns "—" for null or NaN input (M-4 guard)', () => {
+    expect(formatDuration(null)).toBe('—')
+    expect(formatDuration(NaN)).toBe('—')
   })
 })
 
@@ -328,5 +351,17 @@ describe('teamInactivity', () => {
     const refDate = new Date('2026-05-16')
     const incidents = [makeGroupInc('Tiny', 5, refDate)]
     expect(teamInactivity(incidents)).toHaveLength(0)
+  })
+
+  it('skips incidents with null updated date without crashing (M-4)', () => {
+    const refDate = new Date('2026-05-16')
+    const valid = Array.from({ length: 5 }, () => makeGroupInc('G', 5, refDate))
+    const broken = { ...makeInc(), updated: null, assignmentGroup: 'G' }
+    expect(() => teamInactivity([...valid, broken])).not.toThrow()
+  })
+
+  it('returns empty array when dataset has no valid dates (M-1 guard)', () => {
+    const broken = { ...makeInc(), updated: null, assignmentGroup: 'G' }
+    expect(teamInactivity([broken])).toEqual([])
   })
 })

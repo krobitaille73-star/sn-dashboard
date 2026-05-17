@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Real incident data — contains employee/customer PII, never commit
+public/data/incidents.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

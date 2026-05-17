@@ -8,10 +8,14 @@ const PRIORITY_COLOR = {
   "4 - Low": "#3b82f6",
 };
 
+// L-1: whitelist prevents prototype-key injection if sort ever comes from a URL param
+const SORT_KEYS = { closeMinutes: true, reassignmentCount: true };
+
 export default function Top20SlowTickets({ tickets }) {
   const [sort, setSort] = useState("closeMinutes");
 
-  const sorted = [...tickets].sort((a, b) => b[sort] - a[sort]);
+  const safeSort = SORT_KEYS[sort] ? sort : "closeMinutes";
+  const sorted = [...tickets].sort((a, b) => b[safeSort] - a[safeSort]);
 
   return (
     <div style={{ background: "#fff", borderRadius: 12, padding: 16, boxShadow: "0 1px 3px rgba(0,0,0,.08)" }}>
