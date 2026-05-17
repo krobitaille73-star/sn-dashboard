@@ -4,6 +4,7 @@ import IncidentsByMonthChart from "../components/IncidentsByMonthChart";
 import PriorityChart from "../components/PriorityChart";
 import StateChart from "../components/StateChart";
 import AssignmentGroupChart from "../components/AssignmentGroupChart";
+import CriticalHighWidget from "../components/CriticalHighWidget";
 import CloseTimeDistribution from "../components/CloseTimeDistribution";
 import Top20SlowTickets from "../components/Top20SlowTickets";
 import TeamInactivity from "../components/TeamInactivity";
@@ -139,7 +140,11 @@ export default function Dashboard({ incidents }) {
               <StateChart data={stateData} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <PriorityChart data={priorityData} />
+              {/* Left column: priority bar chart + critical/high widget stacked */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <PriorityChart data={priorityData} />
+                <CriticalHighWidget incidents={filtered} />
+              </div>
               <AssignmentGroupChart data={groupData} />
             </div>
           </>

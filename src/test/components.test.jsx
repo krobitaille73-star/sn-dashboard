@@ -9,6 +9,7 @@ import IncidentsByMonthChart from '../components/IncidentsByMonthChart'
 import PriorityChart from '../components/PriorityChart'
 import StateChart from '../components/StateChart'
 import AssignmentGroupChart from '../components/AssignmentGroupChart'
+import CriticalHighWidget from '../components/CriticalHighWidget'
 
 // Recharts uses ResizeObserver which isn't available in jsdom
 global.ResizeObserver = class {
@@ -195,5 +196,52 @@ describe('AssignmentGroupChart', () => {
   it('renders without crashing with empty data', () => {
     const { container } = render(<AssignmentGroupChart data={[]} />)
     expect(container.firstChild).toBeTruthy()
+  })
+})
+
+// ── CriticalHighWidget ────────────────────────────────────────────────────────
+
+function makeIncs(priorities) {
+  return priorities.map((p) => ({ priority: p }))
+}
+
+describe('CriticalHighWidget', () => {
+  it('renders the section title', () => {
+    render(<CriticalHighWidget incidents={[]} />)
+    expect(screen.getByText('Critical & High Tickets')).toBeInTheDocument()
+  })
+
+  it('renders Critical and High labels', () => {
+    render(<CriticalHighWidget incidents={[]} />)
+    // Use getAllByText since "Critical" also appears in the title
+    expect(screen.getAllByText(/Critical/).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/High/).length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('shows correct count for Critical tickets', () => {
+    const incidents = makeIncs(['1 - Critical', '1 - Critical', '4 - Low'])
+    render(<CriticalHighWidget incidents={incidents} />)
+    // The big number "2" should appear for Critical
+    const twos = screen.getAllByText('2')
+    expect(twos.length).toBeGreaterThan(0)
+  })
+
+  it('shows 0 when no critical or high tickets', () => {
+    const incidents = makeIncs(['4 - Low', '3 - Moderate'])
+    render(<CriticalHighWidget incidents={incidents} />)
+    const zeros = screen.getAllByText('0')
+    expect(zeros.length).toBe(2) // one for Critical, one for High
+  })
+
+  it('renders without crashing with empty incidents', () => {
+    const { container } = render(<CriticalHighWidget incidents={[]} />)
+    expect(container.firstChild).toBeTruthy()
+  })
+
+  it('shows combined total badge', () => {
+    const incidents = makeIncs(['1 - Critical', '2 - High', '2 - High'])
+    render(<CriticalHighWidget incidents={incidents} />)
+    // Badge text: "3 total · X% of all tickets"
+    expect(screen.getAllByText(/3 total/).length).toBeGreaterThan(0)
   })
 })
