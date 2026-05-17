@@ -9,9 +9,18 @@ export function useIncidents(jsonUrl) {
   useEffect(() => {
     if (!jsonUrl) return;
     fetch(jsonUrl)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status} — ${r.url}`);
+        // Use text() then JSON.parse() — Safari's response.json() streaming
+        // parser rejects certain valid JSON that JSON.parse() handles fine.
+        return r.text();
+      })
+      .then((text) => JSON.parse(text))
       .then((rows) => setIncidents(parseIncidents(rows)))
-      .catch(setError)
+      .catch((err) => {
+        console.error("[useIncidents]", err);
+        setError(err);
+      })
       .finally(() => setLoading(false));
   }, [jsonUrl]);
 
