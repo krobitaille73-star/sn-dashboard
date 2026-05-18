@@ -8,6 +8,7 @@ import CriticalHighWidget from "../components/CriticalHighWidget";
 import CloseTimeDistribution from "../components/CloseTimeDistribution";
 import Top20SlowTickets from "../components/Top20SlowTickets";
 import TeamInactivity from "../components/TeamInactivity";
+import TicketList from "../components/TicketList";
 import {
   groupBy,
   incidentsByMonth,
@@ -18,11 +19,17 @@ import {
   teamInactivity,
 } from "../utils/parseIncidents";
 
-const SECTIONS = ["Overview", "Close Time", "Slow Tickets", "Team Inactivity"];
+const SECTIONS = ["Overview", "Tickets", "Close Time", "Slow Tickets", "Team Inactivity"];
 
 export default function Dashboard({ incidents }) {
   const [search, setSearch] = useState("");
   const [section, setSection] = useState("Overview");
+  const [ticketPriority, setTicketPriority] = useState("");
+
+  function handlePriorityClick(priority) {
+    setTicketPriority(priority);
+    setSection("Tickets");
+  }
 
   const filtered = useMemo(() => {
     if (!search) return incidents;
@@ -107,7 +114,7 @@ export default function Dashboard({ incidents }) {
           {SECTIONS.map((s) => (
             <button
               key={s}
-              onClick={() => setSection(s)}
+              onClick={() => { setSection(s); if (s === "Tickets") setTicketPriority(""); }}
               style={{
                 border: "none",
                 borderRadius: 7,
@@ -143,11 +150,16 @@ export default function Dashboard({ incidents }) {
               {/* Left column: priority bar chart + critical/high widget stacked */}
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <PriorityChart data={priorityData} />
-                <CriticalHighWidget incidents={filtered} />
+                <CriticalHighWidget incidents={filtered} onPriorityClick={handlePriorityClick} />
               </div>
               <AssignmentGroupChart data={groupData} />
             </div>
           </>
+        )}
+
+        {/* === TICKETS === */}
+        {section === "Tickets" && (
+          <TicketList incidents={filtered} initialPriority={ticketPriority} />
         )}
 
         {/* === CLOSE TIME === */}

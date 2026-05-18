@@ -17,7 +17,7 @@ const LEVELS = [
   },
 ];
 
-export default function CriticalHighWidget({ incidents }) {
+export default function CriticalHighWidget({ incidents, onPriorityClick }) {
   const total = incidents.length || 1;
 
   const counts = LEVELS.map((l) => ({
@@ -66,16 +66,26 @@ export default function CriticalHighWidget({ incidents }) {
         return (
           <div
             key={l.key}
+            onClick={() => onPriorityClick?.(l.key)}
             style={{
               background: l.bg,
               border: `1px solid ${l.border}`,
               borderRadius: 10,
               padding: "12px 14px",
+              cursor: onPriorityClick ? "pointer" : "default",
+              transition: "box-shadow .15s, transform .15s",
             }}
+            onMouseEnter={e => { if (onPriorityClick) { e.currentTarget.style.boxShadow = `0 4px 12px ${l.color}33`; e.currentTarget.style.transform = "translateY(-1px)"; }}}
+            onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: l.color }}>
                 {l.icon} {l.label}
+                {onPriorityClick && (
+                  <span style={{ fontSize: 10, fontWeight: 500, marginLeft: 8, opacity: 0.6 }}>
+                    View tickets →
+                  </span>
+                )}
               </span>
               <div style={{ textAlign: "right" }}>
                 <span style={{ fontSize: 26, fontWeight: 800, color: l.color, lineHeight: 1 }}>
