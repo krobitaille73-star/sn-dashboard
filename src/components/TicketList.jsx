@@ -93,10 +93,12 @@ export default function TicketList({ incidents, initialPriority = "" }) {
   };
 
   const thStyle = (col) => ({
-    padding: "6px 8px",
+    padding: "5px 6px",
     textAlign: "left",
     fontWeight: 700,
     color: "#6b7280",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
     whiteSpace: "nowrap",
     cursor: "pointer",
     userSelect: "none",
@@ -141,12 +143,24 @@ export default function TicketList({ incidents, initialPriority = "" }) {
         </div>
       </div>
 
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+      <div>
+        <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse", fontSize: 11 }}>
+          <colgroup>
+            <col style={{ width: "3%" }} />   {/* # */}
+            <col style={{ width: "8%" }} />   {/* Ticket */}
+            <col style={{ width: "20%" }} />  {/* Description */}
+            <col style={{ width: "9%" }} />   {/* Priority */}
+            <col style={{ width: "14%" }} />  {/* Assignment Group */}
+            <col style={{ width: "8%" }} />   {/* Resolve Time */}
+            <col style={{ width: "6%" }} />   {/* State */}
+            <col style={{ width: "14%" }} />  {/* Store */}
+            <col style={{ width: "9%" }} />   {/* Opened */}
+            <col style={{ width: "9%" }} />   {/* Resolved */}
+          </colgroup>
           <thead>
             {/* Sortable column headers */}
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
-              <th style={{ padding: "6px 8px", color: "#6b7280", fontWeight: 700, whiteSpace: "nowrap" }}>#</th>
+              <th style={{ padding: "5px 6px", color: "#6b7280", fontWeight: 700, whiteSpace: "nowrap" }}>#</th>
               <th style={thStyle("number")} onClick={() => toggleSort("number")}>Ticket <SortIndicator col="number" /></th>
               <th style={thStyle("shortDescription")} onClick={() => toggleSort("shortDescription")}>Description <SortIndicator col="shortDescription" /></th>
               <th style={thStyle("priority")} onClick={() => toggleSort("priority")}>Priority <SortIndicator col="priority" /></th>
@@ -207,31 +221,32 @@ export default function TicketList({ incidents, initialPriority = "" }) {
             ) : (
               visible.map((t, i) => (
                 <tr key={t.number} style={{ borderBottom: "1px solid #f9fafb", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
-                  <td style={{ padding: "6px 8px", color: "#9ca3af", fontWeight: 600 }}>{i + 1}</td>
-                  <td style={{ padding: "6px 8px", fontWeight: 700, color: "#1d4ed8", whiteSpace: "nowrap" }}>{t.number}</td>
-                  <td style={{ padding: "6px 8px", color: "#374151", maxWidth: 280, minWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                  <td style={{ padding: "5px 6px", color: "#9ca3af", fontWeight: 600 }}>{i + 1}</td>
+                  <td style={{ padding: "5px 6px", fontWeight: 700, color: "#1d4ed8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                      title={t.number}>{t.number}</td>
+                  <td style={{ padding: "5px 6px", color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                       title={t.shortDescription}>
                     {t.shortDescription || <span style={{ color: "#d1d5db" }}>—</span>}
                   </td>
-                  <td style={{ padding: "6px 8px" }}>
+                  <td style={{ padding: "5px 6px", overflow: "hidden" }}>
                     <span style={{
-                      display: "inline-block", borderRadius: 999, padding: "2px 8px",
-                      fontSize: 10, fontWeight: 700, color: "#fff",
-                      background: PRIORITY_COLOR[t.priority] ?? "#6b7280", whiteSpace: "nowrap",
-                    }}>
+                      display: "block", borderRadius: 999, padding: "2px 6px",
+                      fontSize: 10, fontWeight: 700, color: "#fff", textAlign: "center",
+                      background: PRIORITY_COLOR[t.priority] ?? "#6b7280",
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    }} title={t.priority}>
                       {t.priority}
                     </span>
                   </td>
-                  <td style={{ padding: "6px 8px", color: "#374151", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {t.assignmentGroup}
-                  </td>
-                  <td style={{ padding: "6px 8px", color: "#111827", whiteSpace: "nowrap" }}>
+                  <td style={{ padding: "5px 6px", color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                      title={t.assignmentGroup}>{t.assignmentGroup}</td>
+                  <td style={{ padding: "5px 6px", color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {formatDuration(resolveMinutes(t))}
                   </td>
-                  <td style={{ padding: "6px 8px" }}>
+                  <td style={{ padding: "5px 6px", overflow: "hidden" }}>
                     <span style={{
-                      display: "inline-block", borderRadius: 999, padding: "2px 8px",
-                      fontSize: 10, fontWeight: 600,
+                      display: "block", borderRadius: 999, padding: "2px 4px",
+                      fontSize: 10, fontWeight: 600, textAlign: "center",
                       background: t.state === "Closed" ? "#f0fdf4" : "#fff7ed",
                       color: t.state === "Closed" ? "#15803d" : "#c2410c",
                       border: `1px solid ${t.state === "Closed" ? "#86efac" : "#fed7aa"}`,
@@ -240,11 +255,10 @@ export default function TicketList({ incidents, initialPriority = "" }) {
                       {t.state}
                     </span>
                   </td>
-                  <td style={{ padding: "6px 8px", color: "#374151", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {t.store}
-                  </td>
-                  <td style={{ padding: "6px 8px", color: "#6b7280", whiteSpace: "nowrap" }}>{fmtDate(t.opened)}</td>
-                  <td style={{ padding: "6px 8px", color: "#6b7280", whiteSpace: "nowrap" }}>{fmtDate(t.closed)}</td>
+                  <td style={{ padding: "5px 6px", color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                      title={t.store}>{t.store}</td>
+                  <td style={{ padding: "5px 6px", color: "#6b7280", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fmtDate(t.opened)}</td>
+                  <td style={{ padding: "5px 6px", color: "#6b7280", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fmtDate(t.closed)}</td>
                 </tr>
               ))
             )}
