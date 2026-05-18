@@ -142,19 +142,7 @@ export default function TicketList({ incidents, initialPriority = "" }) {
       </div>
 
       <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", minWidth: 1480, borderCollapse: "collapse", fontSize: 12 }}>
-          <colgroup>
-            <col style={{ width: 40 }} />   {/* # */}
-            <col style={{ width: 110 }} />  {/* Ticket */}
-            <col style={{ width: 320 }} />  {/* Description */}
-            <col style={{ width: 120 }} />  {/* Priority */}
-            <col style={{ width: 220 }} />  {/* Assignment Group */}
-            <col style={{ width: 130 }} />  {/* Resolve Time */}
-            <col style={{ width: 100 }} />  {/* State */}
-            <col style={{ width: 200 }} />  {/* Store */}
-            <col style={{ width: 110 }} />  {/* Opened */}
-            <col style={{ width: 110 }} />  {/* Resolved */}
-          </colgroup>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <thead>
             {/* Sortable column headers */}
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
@@ -221,7 +209,7 @@ export default function TicketList({ incidents, initialPriority = "" }) {
                 <tr key={t.number} style={{ borderBottom: "1px solid #f9fafb", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
                   <td style={{ padding: "6px 8px", color: "#9ca3af", fontWeight: 600 }}>{i + 1}</td>
                   <td style={{ padding: "6px 8px", fontWeight: 700, color: "#1d4ed8", whiteSpace: "nowrap" }}>{t.number}</td>
-                  <td style={{ padding: "6px 8px", color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                  <td style={{ padding: "6px 8px", color: "#374151", maxWidth: 280, minWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                       title={t.shortDescription}>
                     {t.shortDescription || <span style={{ color: "#d1d5db" }}>—</span>}
                   </td>
@@ -234,7 +222,7 @@ export default function TicketList({ incidents, initialPriority = "" }) {
                       {t.priority}
                     </span>
                   </td>
-                  <td style={{ padding: "6px 8px", color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <td style={{ padding: "6px 8px", color: "#374151", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {t.assignmentGroup}
                   </td>
                   <td style={{ padding: "6px 8px", color: "#111827", whiteSpace: "nowrap" }}>
@@ -252,7 +240,7 @@ export default function TicketList({ incidents, initialPriority = "" }) {
                       {t.state}
                     </span>
                   </td>
-                  <td style={{ padding: "6px 8px", color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <td style={{ padding: "6px 8px", color: "#374151", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {t.store}
                   </td>
                   <td style={{ padding: "6px 8px", color: "#6b7280", whiteSpace: "nowrap" }}>{fmtDate(t.opened)}</td>
