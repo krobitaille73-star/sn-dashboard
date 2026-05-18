@@ -29,7 +29,7 @@ import re
 
 # ── Path validation ──────────────────────────────────────────────────────────
 
-src = sys.argv[1] if len(sys.argv) > 1 else "SN2.numbers"
+src = sys.argv[1] if len(sys.argv) > 1 else "SN3.xlsx"
 dst = sys.argv[2] if len(sys.argv) > 2 else "public/data/incidents.json"
 
 dst_path = pathlib.Path(dst).resolve()
