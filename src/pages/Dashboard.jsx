@@ -88,7 +88,7 @@ export default function Dashboard({ incidents }) {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f1f5f9", padding: 24, fontFamily: "system-ui, sans-serif" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+      <div style={{ maxWidth: section === "Tickets" ? 1800 : 1280, margin: "0 auto", transition: "max-width .2s" }}>
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
