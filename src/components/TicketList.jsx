@@ -21,7 +21,7 @@ const FILTER_INPUT_STYLE = {
   boxSizing: "border-box",
 };
 
-const EMPTY_FILTERS = { number: "", priority: "", assignmentGroup: "", state: "", store: "" };
+const EMPTY_FILTERS = { number: "", description: "", priority: "", assignmentGroup: "", state: "", store: "" };
 
 function unique(arr) {
   return [...new Set(arr.filter(Boolean))].sort();
@@ -63,6 +63,8 @@ export default function TicketList({ incidents, initialPriority = "" }) {
     let rows = incidents;
     if (filters.number)
       rows = rows.filter(t => t.number.toLowerCase().includes(filters.number.toLowerCase()));
+    if (filters.description)
+      rows = rows.filter(t => t.shortDescription.toLowerCase().includes(filters.description.toLowerCase()));
     if (filters.priority)
       rows = rows.filter(t => t.priority === filters.priority);
     if (filters.assignmentGroup)
@@ -146,6 +148,7 @@ export default function TicketList({ incidents, initialPriority = "" }) {
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
               <th style={{ padding: "6px 8px", color: "#6b7280", fontWeight: 700, whiteSpace: "nowrap" }}>#</th>
               <th style={thStyle("number")} onClick={() => toggleSort("number")}>Ticket <SortIndicator col="number" /></th>
+              <th style={thStyle("shortDescription")} onClick={() => toggleSort("shortDescription")}>Description <SortIndicator col="shortDescription" /></th>
               <th style={thStyle("priority")} onClick={() => toggleSort("priority")}>Priority <SortIndicator col="priority" /></th>
               <th style={thStyle("assignmentGroup")} onClick={() => toggleSort("assignmentGroup")}>Assignment Group <SortIndicator col="assignmentGroup" /></th>
               <th style={thStyle("resolveTime")} onClick={() => toggleSort("resolveTime")}>Resolve Time <SortIndicator col="resolveTime" /></th>
@@ -160,6 +163,10 @@ export default function TicketList({ incidents, initialPriority = "" }) {
               <td style={{ padding: "4px 8px" }}>
                 <input type="text" placeholder="Filter…" value={filters.number}
                   onChange={e => setFilter("number", e.target.value)} style={FILTER_INPUT_STYLE} />
+              </td>
+              <td style={{ padding: "4px 8px" }}>
+                <input type="text" placeholder="Search description…" value={filters.description}
+                  onChange={e => setFilter("description", e.target.value)} style={FILTER_INPUT_STYLE} />
               </td>
               <td style={{ padding: "4px 8px" }}>
                 <select value={filters.priority} onChange={e => setFilter("priority", e.target.value)} style={FILTER_INPUT_STYLE}>
@@ -193,7 +200,7 @@ export default function TicketList({ incidents, initialPriority = "" }) {
           <tbody>
             {visible.length === 0 ? (
               <tr>
-                <td colSpan={9} style={{ textAlign: "center", color: "#9ca3af", padding: "24px 0", fontSize: 12 }}>
+                <td colSpan={10} style={{ textAlign: "center", color: "#9ca3af", padding: "24px 0", fontSize: 12 }}>
                   No tickets match the current filters.
                 </td>
               </tr>
@@ -202,6 +209,10 @@ export default function TicketList({ incidents, initialPriority = "" }) {
                 <tr key={t.number} style={{ borderBottom: "1px solid #f9fafb", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
                   <td style={{ padding: "6px 8px", color: "#9ca3af", fontWeight: 600 }}>{i + 1}</td>
                   <td style={{ padding: "6px 8px", fontWeight: 700, color: "#1d4ed8", whiteSpace: "nowrap" }}>{t.number}</td>
+                  <td style={{ padding: "6px 8px", color: "#374151", maxWidth: 280, minWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                      title={t.shortDescription}>
+                    {t.shortDescription || <span style={{ color: "#d1d5db" }}>—</span>}
+                  </td>
                   <td style={{ padding: "6px 8px" }}>
                     <span style={{
                       display: "inline-block", borderRadius: 999, padding: "2px 8px",
