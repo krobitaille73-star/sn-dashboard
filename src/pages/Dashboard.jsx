@@ -6,6 +6,7 @@ import StateChart from "../components/StateChart";
 import AssignmentGroupChart from "../components/AssignmentGroupChart";
 import CriticalHighWidget from "../components/CriticalHighWidget";
 import CloseTimeDistribution from "../components/CloseTimeDistribution";
+import SlowGroupsWidget from "../components/SlowGroupsWidget";
 import Top20SlowTickets from "../components/Top20SlowTickets";
 import TeamInactivity from "../components/TeamInactivity";
 import TicketList from "../components/TicketList";
@@ -16,6 +17,7 @@ import {
   formatDuration,
   closeTimeDistribution,
   top20SlowestTickets,
+  slowTicketsByGroup,
   teamInactivity,
 } from "../utils/parseIncidents";
 
@@ -92,8 +94,9 @@ export default function Dashboard({ incidents }) {
     const g = groupBy(filtered, "assignmentGroup");
     return Object.entries(g).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
   }, [filtered]);
-  const distData      = useMemo(() => closeTimeDistribution(filtered), [filtered]);
-  const slowTickets   = useMemo(() => top20SlowestTickets(filtered), [filtered]);
+  const distData       = useMemo(() => closeTimeDistribution(filtered), [filtered]);
+  const slowTickets    = useMemo(() => top20SlowestTickets(filtered), [filtered]);
+  const slowByGroup    = useMemo(() => slowTicketsByGroup(filtered), [filtered]);
   const inactivityData = useMemo(() => teamInactivity(filtered), [filtered]);
 
   return (
@@ -182,6 +185,9 @@ export default function Dashboard({ incidents }) {
               <KpiCard title="Slowest Resolved" value={closeKpis.slowest} color="red" badge="Worst" icon="🐢" />
             </div>
             <CloseTimeDistribution data={distData} />
+            <div style={{ marginTop: 12 }}>
+              <SlowGroupsWidget data={slowByGroup} />
+            </div>
           </>
         )}
 

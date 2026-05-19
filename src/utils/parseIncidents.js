@@ -114,6 +114,31 @@ export function top20SlowestTickets(incidents) {
 }
 
 /**
+ * For each assignment group, return stats on tickets resolved in > 15 days.
+ * Each entry: { name, count, avgDays, maxDays }
+ * Sorted by avgDays descending. Groups with zero qualifying tickets are excluded.
+ */
+export function slowTicketsByGroup(incidents) {
+  const groups = {};
+  incidents.forEach((inc) => {
+    if (inc.state !== "Closed" && inc.state !== "Resolved") return;
+    const m = resolveMinutes(inc);
+    if (m == null || m <= SLOW_TICKET_THRESHOLD_MINUTES) return;
+    const g = inc.assignmentGroup || "Unknown";
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(m / 1440); // convert minutes → days
+  });
+  return Object.entries(groups)
+    .map(([name, days]) => ({
+      name,
+      count: days.length,
+      avgDays: days.reduce((s, d) => s + d, 0) / days.length,
+      maxDays: Math.max(...days),
+    }))
+    .sort((a, b) => b.avgDays - a.avgDays);
+}
+
+/**
  * For each assignment group, compute the average days between the last update
  * and the reference date (latest updated in the dataset).
  */
