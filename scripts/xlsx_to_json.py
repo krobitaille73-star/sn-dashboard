@@ -29,7 +29,7 @@ import re
 
 # ── Path validation ──────────────────────────────────────────────────────────
 
-src = sys.argv[1] if len(sys.argv) > 1 else "SN3.xlsx"
+src = sys.argv[1] if len(sys.argv) > 1 else "SN4.xlsx"
 dst = sys.argv[2] if len(sys.argv) > 2 else "public/data/incidents.json"
 
 dst_path = pathlib.Path(dst).resolve()
@@ -68,7 +68,9 @@ if src_path.suffix.lower() == ".numbers":
 
 else:
     import pandas as pd
-    df = pd.read_excel(str(src_path), sheet_name="Page 1")
+    # Read all sheets and concatenate (SN4 splits data across multiple sheets)
+    all_sheets = pd.read_excel(str(src_path), sheet_name=None)
+    df = pd.concat(all_sheets.values(), ignore_index=True)
     df["Opened"]  = df["Opened"].astype(str)
     df["Updated"] = df["Updated"].astype(str)
     if "Closed" in df.columns:
@@ -77,11 +79,14 @@ else:
 # ── Column selection ─────────────────────────────────────────────────────────
 
 KEEP = [
-    "Number", "Opened", "Assigned to", "Opened by", "Updated", "Updated by",
+    "Number", "Opened", "Assigned to", "Updated",
     "Short description", "Reassignment count", "Assignment group",
     "Priority", "State", "Store",
-    "Resolve time",   # NEW — SLA business-hours seconds (SN2)
-    "Closed",         # NEW — real close timestamp (SN2)
+    "Resolve time",   # SLA business-hours seconds (SN2+)
+    "Closed",         # real close timestamp (SN2+)
+    # Excluded: "Opened by", "Updated by" (not displayed; reduces file size)
+    # Excluded: "Work notes" (free text, PII risk, very large)
+    # Excluded: "Duration" (SN4 duplicate of Resolve time)
 ]
 
 # Keep only columns that exist in this file
@@ -119,7 +124,7 @@ def redact_text(val: str) -> str:
     return val
 
 
-PII_NAME_COLS  = ["Assigned to", "Opened by", "Updated by"]
+PII_NAME_COLS  = ["Assigned to"]
 FREE_TEXT_COLS = ["Short description"]
 
 for col in PII_NAME_COLS:

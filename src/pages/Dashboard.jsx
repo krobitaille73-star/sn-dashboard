@@ -26,6 +26,16 @@ export default function Dashboard({ incidents }) {
   const [section, setSection] = useState("Overview");
   const [ticketPriority, setTicketPriority] = useState("");
 
+  // Dynamic date range derived from the dataset
+  const dateRange = useMemo(() => {
+    const opened = incidents.map(i => i.opened).filter(Boolean);
+    if (!opened.length) return "";
+    const min = new Date(Math.min(...opened.map(d => d.getTime())));
+    const max = new Date(Math.max(...opened.map(d => d.getTime())));
+    const fmt = (d) => d.toLocaleDateString("en-CA", { month: "short", year: "numeric" });
+    return `${fmt(min)} – ${fmt(max)}`;
+  }, [incidents]);
+
   function handlePriorityClick(priority) {
     setTicketPriority(priority);
     setSection("Tickets");
@@ -97,7 +107,7 @@ export default function Dashboard({ incidents }) {
               ServiceNow Incident Dashboard
             </h1>
             <p style={{ margin: "2px 0 0", fontSize: 12, color: "#94a3b8" }}>
-              {filtered.length.toLocaleString()} tickets · Jan–May 2026
+              {filtered.length.toLocaleString()} tickets · {dateRange}
             </p>
           </div>
           <input

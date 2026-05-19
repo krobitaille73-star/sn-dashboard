@@ -46,7 +46,6 @@ describe('parseIncidents', () => {
     const inc = makeInc()
     expect(inc.number).toBe('INC0000001')
     expect(inc.assignedTo).toBe('Alice')
-    expect(inc.openedBy).toBe('Bob')
     expect(inc.priority).toBe('4 - Low')
     expect(inc.state).toBe('Closed')
     expect(inc.store).toBe('Store 1')
@@ -82,7 +81,6 @@ describe('parseIncidents', () => {
     expect(inc.assignmentGroup).toBe('')
     expect(inc.store).toBe('')
     expect(inc.priority).toBe('')
-    expect(inc.workNotes).toBe('')
   })
 
   it('converts reassignmentCount to a number', () => {

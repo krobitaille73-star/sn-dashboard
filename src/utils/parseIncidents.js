@@ -10,10 +10,7 @@ export function parseIncidents(rows) {
     number: row["Number"] ?? "",
     opened: safeDate(row["Opened"]),
     assignedTo: row["Assigned to"] ?? "",
-    openedBy: row["Opened by"] ?? "",
     updated: safeDate(row["Updated"]),
-    updatedBy: row["Updated by"] ?? "",
-    workNotes: row["Work notes"] ?? "",
     // M-5: strip leading BOM chars that cause display artifacts
     shortDescription: (row["Short description"] ?? "").replace(/^﻿+/, ""),
     reassignmentCount: Number(row["Reassignment count"] ?? 0),
