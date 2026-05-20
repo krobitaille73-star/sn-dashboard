@@ -33,7 +33,7 @@ export default function SlowGroupsWidget({ data, onGroupClick }) {
 
   return (
     <div style={{ background: "#fff", borderRadius: 12, padding: 16, boxShadow: "0 1px 3px rgba(0,0,0,.08)" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
         <div>
           <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#374151" }}>
             Avg Resolve Time &gt; {THRESHOLD_DAYS} days — by Assignment Group
@@ -48,6 +48,24 @@ export default function SlowGroupsWidget({ data, onGroupClick }) {
         }}>
           {data.reduce((s, g) => s + g.count, 0).toLocaleString()} slow tickets total
         </span>
+      </div>
+
+      {/* Colour legend */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+        {[
+          { label: "15–20 days", ...accentColor(17) },
+          { label: "20–30 days", ...accentColor(25) },
+          { label: "30–60 days", ...accentColor(45) },
+          { label: "60+ days",   ...accentColor(90) },
+        ].map(({ label, color, bg, border }) => (
+          <span key={label} style={{
+            fontSize: 10, fontWeight: 600,
+            background: bg, color, border: `1px solid ${border}`,
+            borderRadius: 999, padding: "2px 10px",
+          }}>
+            {label}
+          </span>
+        ))}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
