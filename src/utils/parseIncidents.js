@@ -114,24 +114,31 @@ export function top20SlowestTickets(incidents) {
 }
 
 /**
- * For each assignment group, return stats on tickets resolved in > 15 days.
- * Each entry: { name, count, avgDays, maxDays }
- * Sorted by avgDays descending. Groups with zero qualifying tickets are excluded.
+ * For each assignment group, return stats on tickets resolved in > 15 days
+ * alongside the total ticket count for that group.
+ * Each entry: { name, slowCount, totalCount, avgDays, maxDays }
+ * Sorted by avgDays descending. Groups with zero slow tickets are excluded.
  */
 export function slowTicketsByGroup(incidents) {
-  const groups = {};
+  const totals = {};   // all tickets per group
+  const slowDays = {}; // days[] for tickets > threshold
+
   incidents.forEach((inc) => {
+    const g = inc.assignmentGroup || "Unknown";
+    totals[g] = (totals[g] ?? 0) + 1;
+
     if (inc.state !== "Closed" && inc.state !== "Resolved") return;
     const m = resolveMinutes(inc);
     if (m == null || m <= SLOW_TICKET_THRESHOLD_MINUTES) return;
-    const g = inc.assignmentGroup || "Unknown";
-    if (!groups[g]) groups[g] = [];
-    groups[g].push(m / 1440); // convert minutes → days
+    if (!slowDays[g]) slowDays[g] = [];
+    slowDays[g].push(m / 1440); // minutes → days
   });
-  return Object.entries(groups)
+
+  return Object.entries(slowDays)
     .map(([name, days]) => ({
       name,
-      count: days.length,
+      slowCount: days.length,
+      totalCount: totals[name] ?? 0,
       avgDays: days.reduce((s, d) => s + d, 0) / days.length,
       maxDays: Math.max(...days),
     }))

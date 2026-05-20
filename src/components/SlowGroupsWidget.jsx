@@ -46,7 +46,7 @@ export default function SlowGroupsWidget({ data, onGroupClick }) {
           fontSize: 11, fontWeight: 700, borderRadius: 999, padding: "2px 10px",
           background: "#fef2f2", color: "#b91c1c", border: "1px solid #fecaca",
         }}>
-          {data.reduce((s, g) => s + g.count, 0).toLocaleString()} slow tickets total
+          {data.reduce((s, g) => s + g.slowCount, 0).toLocaleString()} slow tickets total
         </span>
       </div>
 
@@ -88,7 +88,7 @@ export default function SlowGroupsWidget({ data, onGroupClick }) {
               }}>
               {/* Group name + counts */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "60%" }}
+                <span style={{ fontSize: 12, fontWeight: 700, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "55%" }}
                       title={g.name}>
                   {g.name}
                   {onGroupClick && (
@@ -97,17 +97,29 @@ export default function SlowGroupsWidget({ data, onGroupClick }) {
                     </span>
                   )}
                 </span>
-                <div style={{ display: "flex", gap: 12, alignItems: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: 11, color: "#6b7280" }}>
-                    <strong style={{ color }}>{g.count.toLocaleString()}</strong> tickets
+                <div style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}>
+                  {/* Slow vs total */}
+                  <span style={{ fontSize: 11, color: "#6b7280", whiteSpace: "nowrap" }}>
+                    <strong style={{ color }}>{g.slowCount.toLocaleString()}</strong>
+                    <span style={{ opacity: 0.5 }}> / </span>
+                    <strong style={{ color: "#374151" }}>{g.totalCount.toLocaleString()}</strong>
+                    <span style={{ opacity: 0.6 }}> tickets</span>
                   </span>
-                  <span style={{ fontSize: 11, color: "#6b7280" }}>
+                  {/* % of group that is slow */}
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, borderRadius: 999, padding: "1px 7px",
+                    background: "rgba(0,0,0,.06)", color: "#374151", whiteSpace: "nowrap",
+                  }}>
+                    {((g.slowCount / g.totalCount) * 100).toFixed(1)}%
+                  </span>
+                  <span style={{ fontSize: 11, color: "#6b7280", whiteSpace: "nowrap" }}>
                     max <strong style={{ color }}>{g.maxDays.toFixed(1)}d</strong>
                   </span>
                   <span style={{
                     fontSize: 13, fontWeight: 800, color,
                     background: "rgba(255,255,255,.6)", borderRadius: 6,
                     padding: "1px 8px", border: `1px solid ${border}`,
+                    whiteSpace: "nowrap",
                   }}>
                     {g.avgDays.toFixed(1)}d avg
                   </span>
