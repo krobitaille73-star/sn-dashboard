@@ -27,6 +27,12 @@ export default function Dashboard({ incidents }) {
   const [search, setSearch] = useState("");
   const [section, setSection] = useState("Overview");
   const [ticketPriority, setTicketPriority] = useState("");
+  const [slowGroup, setSlowGroup] = useState("");
+
+  function handleGroupClick(group) {
+    setSlowGroup(group);
+    setSection("Slow Tickets");
+  }
 
   // Dynamic date range derived from the dataset
   const dateRange = useMemo(() => {
@@ -127,7 +133,7 @@ export default function Dashboard({ incidents }) {
           {SECTIONS.map((s) => (
             <button
               key={s}
-              onClick={() => { setSection(s); if (s === "Tickets") setTicketPriority(""); }}
+              onClick={() => { setSection(s); if (s === "Tickets") setTicketPriority(""); if (s === "Slow Tickets") setSlowGroup(""); }}
               style={{
                 border: "none",
                 borderRadius: 7,
@@ -186,14 +192,14 @@ export default function Dashboard({ incidents }) {
             </div>
             <CloseTimeDistribution data={distData} />
             <div style={{ marginTop: 12 }}>
-              <SlowGroupsWidget data={slowByGroup} />
+              <SlowGroupsWidget data={slowByGroup} onGroupClick={handleGroupClick} />
             </div>
           </>
         )}
 
         {/* === SLOW TICKETS === */}
         {section === "Slow Tickets" && (
-          <Top20SlowTickets tickets={slowTickets} />
+          <Top20SlowTickets tickets={slowTickets} initialGroup={slowGroup} />
         )}
 
         {/* === TEAM INACTIVITY === */}

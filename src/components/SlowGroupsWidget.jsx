@@ -14,7 +14,7 @@ function accentColor(avgDays) {
   return { color: "#b91c1c", bg: "#fef2f2", border: "#fecaca" };
 }
 
-export default function SlowGroupsWidget({ data }) {
+export default function SlowGroupsWidget({ data, onGroupClick }) {
   if (!data || data.length === 0) {
     return (
       <div style={{ background: "#fff", borderRadius: 12, padding: 16, boxShadow: "0 1px 3px rgba(0,0,0,.08)" }}>
@@ -56,17 +56,28 @@ export default function SlowGroupsWidget({ data }) {
           const barPct = (g.avgDays / maxAvg) * 100;
 
           return (
-            <div key={g.name} style={{
-              background: bg,
-              border: `1px solid ${border}`,
-              borderRadius: 8,
-              padding: "10px 12px",
-            }}>
+            <div key={g.name}
+              onClick={() => onGroupClick?.(g.name)}
+              onMouseEnter={e => { if (onGroupClick) { e.currentTarget.style.boxShadow = `0 4px 12px ${color}33`; e.currentTarget.style.transform = "translateY(-1px)"; }}}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}
+              style={{
+                background: bg,
+                border: `1px solid ${border}`,
+                borderRadius: 8,
+                padding: "10px 12px",
+                cursor: onGroupClick ? "pointer" : "default",
+                transition: "box-shadow .15s, transform .15s",
+              }}>
               {/* Group name + counts */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "60%" }}
                       title={g.name}>
                   {g.name}
+                  {onGroupClick && (
+                    <span style={{ fontSize: 10, fontWeight: 500, marginLeft: 6, opacity: 0.6 }}>
+                      View tickets →
+                    </span>
+                  )}
                 </span>
                 <div style={{ display: "flex", gap: 12, alignItems: "center", flexShrink: 0 }}>
                   <span style={{ fontSize: 11, color: "#6b7280" }}>

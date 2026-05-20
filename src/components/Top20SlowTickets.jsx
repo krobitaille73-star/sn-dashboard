@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { formatDuration } from "../utils/parseIncidents";
 
 const PRIORITY_COLOR = {
@@ -37,10 +37,15 @@ function unique(arr) {
 
 const EMPTY_FILTERS = { number: "", priority: "", assignmentGroup: "", store: "" };
 
-export default function Top20SlowTickets({ tickets }) {
+export default function Top20SlowTickets({ tickets, initialGroup = "" }) {
   const [sort, setSort] = useState("closeMinutes");
   const [pageSize, setPageSize] = useState(20);
-  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [filters, setFilters] = useState({ ...EMPTY_FILTERS, assignmentGroup: initialGroup });
+
+  // Sync when parent changes the pre-filter (e.g. clicking a widget)
+  useEffect(() => {
+    setFilters(f => ({ ...f, assignmentGroup: initialGroup }));
+  }, [initialGroup]);
 
   const hasActiveFilter = Object.values(filters).some(Boolean);
 
