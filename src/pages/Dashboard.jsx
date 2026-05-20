@@ -10,6 +10,7 @@ import SlowGroupsWidget from "../components/SlowGroupsWidget";
 import Top20SlowTickets from "../components/Top20SlowTickets";
 import TeamInactivity from "../components/TeamInactivity";
 import TicketList from "../components/TicketList";
+import OpenQueueTab from "../components/OpenQueueTab";
 import {
   groupBy,
   incidentsByMonth,
@@ -21,9 +22,9 @@ import {
   teamInactivity,
 } from "../utils/parseIncidents";
 
-const SECTIONS = ["Overview", "Tickets", "Close Time", "Slow Tickets", "Team Inactivity"];
+const SECTIONS = ["Overview", "Tickets", "Close Time", "Slow Tickets", "Team Inactivity", "Open Queue"];
 
-export default function Dashboard({ incidents }) {
+export default function Dashboard({ incidents, openQueue = [] }) {
   const [search, setSearch] = useState("");
   const [section, setSection] = useState("Overview");
   const [ticketPriority, setTicketPriority] = useState("");
@@ -145,9 +146,22 @@ export default function Dashboard({ incidents }) {
                 color: section === s ? "#1d4ed8" : "#64748b",
                 boxShadow: section === s ? "0 1px 3px rgba(0,0,0,.12)" : "none",
                 transition: "all .15s",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
               }}
             >
               {s}
+              {s === "Open Queue" && openQueue.length > 0 && (
+                <span style={{
+                  fontSize: 10, fontWeight: 700, borderRadius: 999,
+                  padding: "1px 6px",
+                  background: section === s ? "#dbeafe" : "#e0f2fe",
+                  color: section === s ? "#1d4ed8" : "#0369a1",
+                }}>
+                  {openQueue.length}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -205,6 +219,11 @@ export default function Dashboard({ incidents }) {
         {/* === TEAM INACTIVITY === */}
         {section === "Team Inactivity" && (
           <TeamInactivity data={inactivityData} />
+        )}
+
+        {/* === OPEN QUEUE === */}
+        {section === "Open Queue" && (
+          <OpenQueueTab tickets={openQueue} />
         )}
 
       </div>
